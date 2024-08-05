@@ -1,7 +1,7 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget
 from PyQt5.QtChart import QChart, QLineSeries, QChartView, QScatterSeries
-from PyQt5.QtGui import QPainter
+from PyQt5.QtGui import QPainter, QPen
 from PyQt5.QtCore import Qt, QTimer
 import threading
 import serial
@@ -24,10 +24,21 @@ class Main(QMainWindow):
         self.series3 = QLineSeries()
         self.series4 = QLineSeries()
 
-        self.series1.setColor(Qt.darkGray)
-        self.series2.setColor(Qt.blue)
-        self.series3.setColor(Qt.yellow)
-        self.series4.setColor(Qt.green)
+        pen1 = QPen(Qt.darkCyan)
+        pen1.setWidth(3)
+        self.series1.setPen(pen1)
+
+        pen2 = QPen(Qt.blue)
+        pen2.setWidth(3)
+        self.series2.setPen(pen2)
+
+        pen3 = QPen(Qt.darkMagenta)
+        pen3.setWidth(3)
+        self.series3.setPen(pen3)
+
+        pen4 = QPen(Qt.darkGreen)
+        pen4.setWidth(3)
+        self.series4.setPen(pen4)
 
 
         self.current_point_series1 = QScatterSeries()
@@ -50,7 +61,6 @@ class Main(QMainWindow):
         self.chart3.legend().hide()
         self.chart4.legend().hide()
 
-
         self.chart.addSeries(self.series1)
         self.chart.addSeries(self.current_point_series1)
         self.chart2.addSeries(self.series2)
@@ -62,33 +72,41 @@ class Main(QMainWindow):
 
         self.chart.createDefaultAxes()
         self.chart2.createDefaultAxes()
-        self.chart3.createDefaultAxes()
         self.chart4.createDefaultAxes()
+        self.chart3.createDefaultAxes()
 
         self.chart_view = QChartView(self.chart)
         self.chart_view2 = QChartView(self.chart2)
-        self.chart_view3 = QChartView(self.chart3)
         self.chart_view4 = QChartView(self.chart4)
+        self.chart_view3 = QChartView(self.chart3)
 
         self.chart_view.setRenderHint(QPainter.Antialiasing)
         self.chart_view2.setRenderHint(QPainter.Antialiasing)
-        self.chart_view3.setRenderHint(QPainter.Antialiasing)
         self.chart_view4.setRenderHint(QPainter.Antialiasing)
+        self.chart_view3.setRenderHint(QPainter.Antialiasing)
 
         self.central_widget = QWidget()
 
         self.layout = QVBoxLayout(self.central_widget)
         self.layout.addWidget(self.chart_view)
         self.layout.addWidget(self.chart_view2)
-        self.layout.addWidget(self.chart_view3)
         self.layout.addWidget(self.chart_view4)
+        self.layout.addWidget(self.chart_view3)
 
         self.setCentralWidget(self.central_widget)
 
         # Timer
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_chart)
-        self.timer.start(1)  # 100 ms마다 업데이트
+        self.timer.start(1)
+
+        for chart_view in [self.chart_view, self.chart_view2, self.chart_view3, self.chart_view4]:
+            chart_view.chart().axes(Qt.Horizontal)[0].setVisible(False)
+            chart_view.chart().axes(Qt.Vertical)[0].setVisible(False)
+            chart_view.chart().setBackgroundRoundness(0)
+            chart_view.chart().setBackgroundVisible(False)
+            for axis in chart_view.chart().axes():
+                axis.setGridLineVisible(False)  # 그리드 숨김
 
     def read_serial_sensor(self):
         self.ser = serial.Serial(port='COM6', baudrate=9600)
@@ -122,7 +140,7 @@ class Main(QMainWindow):
 
             self.x += 1
 
-            if self.series1.count() > self.max_points:
+            if self.series1.count() > 255:
                 self.series1.remove(0)
                 self.series2.remove(0)
                 self.series3.remove(0)
@@ -142,6 +160,7 @@ class Main(QMainWindow):
     def start(self):
         self.serialSensorReadThread = threading.Thread(target=self.read_serial_sensor, daemon=True)
         self.serialSensorReadThread.start()
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
