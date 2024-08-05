@@ -9,6 +9,9 @@ import serial
 import queue
 import serial.tools.list_ports as sp
 
+# 커서 문제 수정
+# y축 높이 높게 -> 차이 잘 보이도록
+# -> 아마 데이터 너무 많아지고 커져서 문제 생기는 것으로 추정
 
 
 class Main(QMainWindow):
@@ -19,13 +22,17 @@ class Main(QMainWindow):
         self.x = 0
         self.max_points = 255
         self.setWindowTitle("Real-time Graph")
-        self.setGeometry(100, 100, 700, 500)  # 전체 윈도우 크기 설정
+        self.setGeometry(70, 70, 1500, 800)  # 전체 윈도우 크기 설정
 
         self.series1 = QLineSeries()
         self.series2 = QLineSeries()
         self.series3 = QLineSeries()
         self.series4 = QLineSeries()
         self.cursor_series1 = QScatterSeries()
+        self.cursor_series2 = QScatterSeries()
+        self.cursor_series3 = QScatterSeries()
+        self.cursor_series4 = QScatterSeries()
+
 
         pen1 = QPen(Qt.magenta)
         pen1.setWidth(2)
@@ -44,7 +51,13 @@ class Main(QMainWindow):
         self.series4.setPen(pen4)
 
         self.cursor_series1.setColor(Qt.red)
-        self.cursor_series1.setMarkerSize(15)  # 커서 크기를 15로 설정
+        self.cursor_series1.setMarkerSize(15)
+        self.cursor_series2.setColor(Qt.red)
+        self.cursor_series2.setMarkerSize(15)
+        self.cursor_series3.setColor(Qt.red)
+        self.cursor_series3.setMarkerSize(15)
+        self.cursor_series4.setColor(Qt.red)
+        self.cursor_series4.setMarkerSize(15)
 
         self.chart = QChart()
         self.chart2 = QChart()
@@ -65,7 +78,7 @@ class Main(QMainWindow):
         self.axis_x1 = QValueAxis()
         self.axis_x1.setRange(0, self.max_points)
         self.axis_y1 = QValueAxis()
-        self.axis_y1.setRange(0, 300)
+        self.axis_y1.setRange(0, 255)
         self.chart.addAxis(self.axis_x1, Qt.AlignBottom)
         self.chart.addAxis(self.axis_y1, Qt.AlignLeft)
         self.series1.attachAxis(self.axis_x1)
@@ -76,29 +89,35 @@ class Main(QMainWindow):
         self.axis_x2 = QValueAxis()
         self.axis_x2.setRange(0, self.max_points)
         self.axis_y2 = QValueAxis()
-        self.axis_y2.setRange(0, 300)
+        self.axis_y2.setRange(0, 255)
         self.chart2.addAxis(self.axis_x2, Qt.AlignBottom)
         self.chart2.addAxis(self.axis_y2, Qt.AlignLeft)
         self.series2.attachAxis(self.axis_x2)
         self.series2.attachAxis(self.axis_y2)
+        self.cursor_series2.attachAxis(self.axis_x1)
+        self.cursor_series2.attachAxis(self.axis_y1)
 
         self.axis_x3 = QValueAxis()
         self.axis_x3.setRange(0, self.max_points)
         self.axis_y3 = QValueAxis()
-        self.axis_y3.setRange(0, 300)
+        self.axis_y3.setRange(0, 255)
         self.chart3.addAxis(self.axis_x3, Qt.AlignBottom)
         self.chart3.addAxis(self.axis_y3, Qt.AlignLeft)
         self.series3.attachAxis(self.axis_x3)
         self.series3.attachAxis(self.axis_y3)
+        self.cursor_series3.attachAxis(self.axis_x1)
+        self.cursor_series3.attachAxis(self.axis_y1)
 
         self.axis_x4 = QValueAxis()
         self.axis_x4.setRange(0, self.max_points)
         self.axis_y4 = QValueAxis()
-        self.axis_y4.setRange(0, 300)
+        self.axis_y4.setRange(0, 255)
         self.chart4.addAxis(self.axis_x4, Qt.AlignBottom)
         self.chart4.addAxis(self.axis_y4, Qt.AlignLeft)
         self.series4.attachAxis(self.axis_x4)
         self.series4.attachAxis(self.axis_y4)
+        self.cursor_series4.attachAxis(self.axis_x1)
+        self.cursor_series4.attachAxis(self.axis_y1)
 
         self.chart_view = QChartView(self.chart)
         self.chart_view2 = QChartView(self.chart2)
@@ -180,7 +199,22 @@ class Main(QMainWindow):
             self.series4.append(self.x, y4)
 
             self.cursor_series1.clear()
-            self.cursor_series1.append(self.x % self.max_points, y1)
+            self.cursor_series2.clear()
+            self.cursor_series3.clear()
+            self.cursor_series4.clear()
+
+            if self.series1.count() > 255:
+                self.series1.remove(0)
+                self.series2.remove(0)
+                self.series3.remove(0)
+                self.series4.remove(0)
+
+            # left_range = (self.x // self.max_points) * self.max_points
+            #
+            # self.cursor_series1.append(left_range+self.x % self.max_points, y1)
+            # self.cursor_series2.append(left_range+self.x % self.max_points, y2)
+            # self.cursor_series3.append(left_range+self.x % self.max_points, y3)
+            # self.cursor_series4.append(left_range+self.x % self.max_points, y4)
 
             self.x += 1
 
@@ -191,6 +225,7 @@ class Main(QMainWindow):
             self.axis_x2.setRange(left_range, right_range)
             self.axis_x3.setRange(left_range, right_range)
             self.axis_x4.setRange(left_range, right_range)
+
 
     def run(stop_event):
         while True:
