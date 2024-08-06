@@ -60,6 +60,7 @@ class Main(QMainWindow):
 
         self.theme_combo.currentIndexChanged.connect(self.update_chart_theme)
 
+        #레이아웃
         self.central_widget = QWidget()
         self.menu_widget = QWidget()
         self.setMenuWidget(self.menu_widget)
@@ -72,21 +73,27 @@ class Main(QMainWindow):
         self.h_layout.addWidget(self.start_button)
         self.h_layout.addWidget(self.stop_button)
         self.h_layout.addWidget(self.line_button)
+        self.h_layout.addWidget(self.bar_button)
+        self.h_layout.addWidget(self.polar_button)
         self.h_layout.addWidget(self.theme_combo)
-
-        self.timer = QTimer()
-        self.timer.timeout.connect(self.update_charts)
 
         self.line_graph = None
         self.polar_graph = None
         self.bar_graph = None
 
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.choose_graph)
+
+    def choose_graph(self):
+        if self.line_graph:
+            self.line_graph.update_chart(self.sensorDataQueue)
+        elif self.polar_graph:
+            self.polar_graph.update_chart(self.sensorDataQueue)
+
     def update_chart_theme(self):
         theme = self.theme_combo.currentData()
         if self.line_graph:
             self.line_graph.update_chart_theme(theme)
-
-
 
     def show_line_graph(self):
         if self.line_graph is None:
@@ -96,6 +103,11 @@ class Main(QMainWindow):
         self.v_layout.addWidget(view2,0,1)
         self.v_layout.addWidget(view3,1,0)
         self.v_layout.addWidget(view4,1,1)
+
+    def show_bar_graph(self):
+        print("hehe")
+    def show_polar_graph(self):
+        print('gege')
 
     def read_serial_sensor(self):
         self.ser = serial.Serial(port='COM' + self.combox_select(), baudrate=9600)
@@ -109,45 +121,6 @@ class Main(QMainWindow):
                     print(y1, y2, y3, y4)
         except Exception as e:
             print(f"Error reading serial data: {e}")
-
-    def update_charts(self):
-        while not self.sensorDataQueue.empty():
-            y1, y2, y3, y4 = self.sensorDataQueue.get_nowait()
-
-            self.line_graph.series1.append(self.x, y1)
-            self.line_graph.series2.append(self.x, y2)
-            self.line_graph.series3.append(self.x, y3)
-            self.line_graph.series4.append(self.x, y4)
-
-            self.line_graph.cursor_series1.clear()
-            self.line_graph.cursor_series2.clear()
-            self.line_graph.cursor_series3.clear()
-            self.line_graph.cursor_series4.clear()
-
-            if self.line_graph.series1.count() > 255:
-                self.line_graph.series1.remove(0)
-                self.line_graph.series2.remove(0)
-                self.line_graph.series3.remove(0)
-                self.line_graph.series4.remove(0)
-
-            left_range = (self.x // self.max_points) * self.max_points
-            self.line_graph.cursor_series1.append(left_range + self.x % self.max_points, y1)
-            self.line_graph.cursor_series2.append(left_range + self.x % self.max_points, y2)
-            self.line_graph.cursor_series3.append(left_range + self.x % self.max_points, y3)
-            self.line_graph.cursor_series4.append(left_range + self.x % self.max_points, y4)
-
-            self.x += 1
-
-            left_range = (self.x // self.max_points) * self.max_points
-            right_range = left_range + self.max_points
-
-            self.line_graph.axis_x1.setRange(left_range, right_range)
-            self.line_graph.axis_x2.setRange(left_range, right_range)
-            self.line_graph.axis_x3.setRange(left_range, right_range)
-            self.line_graph.axis_x4.setRange(left_range, right_range)
-
-        # Process UI events to update the chart
-        QtWidgets.QApplication.processEvents()
 
     def start(self):
         self.serialSensorReadThread = threading.Thread(target=self.read_serial_sensor, daemon=True)

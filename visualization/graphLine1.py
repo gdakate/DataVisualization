@@ -7,6 +7,7 @@ class LineGraph:
     def __init__(self):
 
         self.max_points = 255
+        self.x =0
 
 
         # 선 그래프 객체 생성
@@ -108,6 +109,45 @@ class LineGraph:
         self.set_size_policy(self.chart_view2)
         self.set_size_policy(self.chart_view3)
         self.set_size_policy(self.chart_view4)
+
+    def update_chart(self,sensorDataQueue):
+        while not sensorDataQueue.empty():
+            y1, y2, y3, y4 = sensorDataQueue.get_nowait()
+
+            self.series1.append(self.x, y1)
+            self.series2.append(self.x, y2)
+            self.series3.append(self.x, y3)
+            self.series4.append(self.x, y4)
+
+            self.cursor_series1.clear()
+            self.cursor_series2.clear()
+            self.cursor_series3.clear()
+            self.cursor_series4.clear()
+
+            if self.series1.count() > 255:
+                self.series1.remove(0)
+                self.series2.remove(0)
+                self.series3.remove(0)
+                self.series4.remove(0)
+
+            left_range = (self.x // self.max_points) * self.max_points
+            self.cursor_series1.append(left_range + self.x % self.max_points, y1)
+            self.cursor_series2.append(left_range + self.x % self.max_points, y2)
+            self.cursor_series3.append(left_range + self.x % self.max_points, y3)
+            self.cursor_series4.append(left_range + self.x % self.max_points, y4)
+
+            self.x += 1
+
+            left_range = (self.x // self.max_points) * self.max_points
+            right_range = left_range + self.max_points
+
+            self.axis_x1.setRange(left_range, right_range)
+            self.axis_x2.setRange(left_range, right_range)
+            self.axis_x3.setRange(left_range, right_range)
+            self.axis_x4.setRange(left_range, right_range)
+
+        # Process UI events to update the chart
+        QtWidgets.QApplication.processEvents()
 
     def set_size_policy(self, chart_view):
         size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
