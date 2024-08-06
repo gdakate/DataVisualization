@@ -9,10 +9,7 @@ import serial
 import queue
 import serial.tools.list_ports as sp
 
-# 커서 문제 수정
 # y축 높이 높게 -> 차이 잘 보이도록
-# -> 아마 데이터 너무 많아지고 커져서 문제 생기는 것으로 추정
-
 
 class Main(QMainWindow):
 
@@ -72,13 +69,17 @@ class Main(QMainWindow):
         self.chart.addSeries(self.series1)
         self.chart.addSeries(self.cursor_series1)
         self.chart2.addSeries(self.series2)
+        self.chart2.addSeries(self.cursor_series2)
         self.chart3.addSeries(self.series3)
+        self.chart3.addSeries(self.cursor_series3)
         self.chart4.addSeries(self.series4)
+        self.chart4.addSeries(self.cursor_series4)
+
 
         self.axis_x1 = QValueAxis()
         self.axis_x1.setRange(0, self.max_points)
         self.axis_y1 = QValueAxis()
-        self.axis_y1.setRange(0, 255)
+        self.axis_y1.setRange(0, 500)
         self.chart.addAxis(self.axis_x1, Qt.AlignBottom)
         self.chart.addAxis(self.axis_y1, Qt.AlignLeft)
         self.series1.attachAxis(self.axis_x1)
@@ -94,8 +95,8 @@ class Main(QMainWindow):
         self.chart2.addAxis(self.axis_y2, Qt.AlignLeft)
         self.series2.attachAxis(self.axis_x2)
         self.series2.attachAxis(self.axis_y2)
-        self.cursor_series2.attachAxis(self.axis_x1)
-        self.cursor_series2.attachAxis(self.axis_y1)
+        self.cursor_series2.attachAxis(self.axis_x2)
+        self.cursor_series2.attachAxis(self.axis_y2)
 
         self.axis_x3 = QValueAxis()
         self.axis_x3.setRange(0, self.max_points)
@@ -105,8 +106,8 @@ class Main(QMainWindow):
         self.chart3.addAxis(self.axis_y3, Qt.AlignLeft)
         self.series3.attachAxis(self.axis_x3)
         self.series3.attachAxis(self.axis_y3)
-        self.cursor_series3.attachAxis(self.axis_x1)
-        self.cursor_series3.attachAxis(self.axis_y1)
+        self.cursor_series3.attachAxis(self.axis_x3)
+        self.cursor_series3.attachAxis(self.axis_y3)
 
         self.axis_x4 = QValueAxis()
         self.axis_x4.setRange(0, self.max_points)
@@ -116,8 +117,8 @@ class Main(QMainWindow):
         self.chart4.addAxis(self.axis_y4, Qt.AlignLeft)
         self.series4.attachAxis(self.axis_x4)
         self.series4.attachAxis(self.axis_y4)
-        self.cursor_series4.attachAxis(self.axis_x1)
-        self.cursor_series4.attachAxis(self.axis_y1)
+        self.cursor_series4.attachAxis(self.axis_x4)
+        self.cursor_series4.attachAxis(self.axis_y4)
 
         self.chart_view = QChartView(self.chart)
         self.chart_view2 = QChartView(self.chart2)
@@ -209,12 +210,12 @@ class Main(QMainWindow):
                 self.series3.remove(0)
                 self.series4.remove(0)
 
-            # left_range = (self.x // self.max_points) * self.max_points
-            #
-            # self.cursor_series1.append(left_range+self.x % self.max_points, y1)
-            # self.cursor_series2.append(left_range+self.x % self.max_points, y2)
-            # self.cursor_series3.append(left_range+self.x % self.max_points, y3)
-            # self.cursor_series4.append(left_range+self.x % self.max_points, y4)
+            left_range = (self.x // self.max_points) * self.max_points
+
+            self.cursor_series1.append(left_range+self.x % self.max_points, y1)
+            self.cursor_series2.append(left_range+self.x % self.max_points, y2)
+            self.cursor_series3.append(left_range+self.x % self.max_points, y3)
+            self.cursor_series4.append(left_range+self.x % self.max_points, y4)
 
             self.x += 1
 
