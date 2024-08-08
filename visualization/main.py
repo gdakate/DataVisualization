@@ -11,18 +11,22 @@ import serial
 import queue
 import serial.tools.list_ports as sp
 
+from visualization.barChart import BarChart
 from visualization.graphLine1 import LineGraph
+from visualization.polarChart import PolarChart
+
 
 class Main(QMainWindow):
 
     def __init__(self):
         super().__init__()
         self.sensorDataQueue = queue.Queue()
-        self.x = 0
-        self.max_points = 255
+
+        #윈도우 설정
         self.setWindowTitle("Real-time Graph")
         self.setGeometry(70, 70, 1500, 800)
 
+        #콤보박스
         self.cb = QComboBox(self)
         self.numberlist = self.identify_port()
         for i in self.numberlist:
@@ -30,8 +34,9 @@ class Main(QMainWindow):
         self.cb.setMinimumSize(10, 25)
         self.combox_select()
 
-        self.start_button = QPushButton()
-        self.start_button.setIcon(QIcon("image/play.png"))
+        #버튼 생성,설정
+        self.start_button = QPushButton("START")
+        # self.start_button.setIcon(QIcon("image/play.png"))
         self.start_button.clicked.connect(self.start)
 
         self.stop_button = QPushButton()
@@ -47,7 +52,7 @@ class Main(QMainWindow):
         self.polar_button = QPushButton("POLAR")
         self.polar_button.clicked.connect(self.show_polar_graph)
 
-        #테마
+        # QT 테마 적용
         self.theme_combo = QComboBox()
         self.theme_combo.addItem("Light", QChart.ChartThemeLight)
         self.theme_combo.addItem("Blue Cerulean", QChart.ChartThemeBlueCerulean)
@@ -58,9 +63,9 @@ class Main(QMainWindow):
         self.theme_combo.addItem("Blue Icy", QChart.ChartThemeBlueIcy)
         self.theme_combo.addItem("Qt", QChart.ChartThemeQt)
 
-        self.theme_combo.currentIndexChanged.connect(self.update_chart_theme)
+        self.theme_combo.currentIndexChanged.connect(self.choose_graph_theme)
 
-        #레이아웃
+        #레이아웃 설정
         self.central_widget = QWidget()
         self.menu_widget = QWidget()
         self.setMenuWidget(self.menu_widget)
@@ -81,23 +86,39 @@ class Main(QMainWindow):
         self.polar_graph = None
         self.bar_graph = None
 
+        # Timer
         self.timer = QTimer()
         self.timer.timeout.connect(self.choose_graph)
+
+    def clear_layout(self, layout):
+        while layout.count():
+            item = layout.takeAt(0)
+            widget = item.widget()
+            if widget is not None:
+                widget.deleteLater()
 
     def choose_graph(self):
         if self.line_graph:
             self.line_graph.update_chart(self.sensorDataQueue)
         elif self.polar_graph:
-            self.polar_graph.update_chart(self.sensorDataQueue)
+            self.polar_graph.update_polar_chart(self.sensorDataQueue)
+        elif self.bar_graph:
+            self.bar_graph.update_bar_chart(self.sensorDataQueue)
 
-    def update_chart_theme(self):
+    def choose_graph_theme(self):
         theme = self.theme_combo.currentData()
         if self.line_graph:
             self.line_graph.update_chart_theme(theme)
+        elif self.polar_graph:
+            self.polar_graph.update_chart_theme(theme)
+        elif self.bar_graph:
+            self.bar_graph.update_chart_theme(theme)
 
     def show_line_graph(self):
-        if self.line_graph is None:
-            self.line_graph = LineGraph()
+        self.clear_layout(self.v_layout)
+        self.line_graph = LineGraph()
+        self.polar_graph = None
+        self.bar_graph = None
         view1,view2,view3,view4 = self.line_graph.get_views()
         self.v_layout.addWidget(view1,0,0)
         self.v_layout.addWidget(view2,0,1)
@@ -105,9 +126,22 @@ class Main(QMainWindow):
         self.v_layout.addWidget(view4,1,1)
 
     def show_bar_graph(self):
-        print("hehe")
+        self.clear_layout(self.v_layout)
+        self.bar_graph = BarChart()
+        self.line_graph = None
+        self.polar_graph = None
+
+        view = self.bar_graph.get_view()
+        self.v_layout.addWidget(view,0,0)
+
     def show_polar_graph(self):
-        print('gege')
+        self.clear_layout(self.v_layout)
+        self.polar_graph = PolarChart()
+        self.line_graph = None
+        self.bar_graph = None
+
+        view = self.polar_graph.get_view()
+        self.v_layout.addWidget(view,0,0)
 
     def read_serial_sensor(self):
         self.ser = serial.Serial(port='COM' + self.combox_select(), baudrate=9600)
