@@ -119,6 +119,8 @@ class Main(QMainWindow):
         self.line_graph = LineGraph()
         self.polar_graph = None
         self.bar_graph = None
+        self.choose_graph_theme()
+
         view1,view2,view3,view4 = self.line_graph.get_views()
         self.v_layout.addWidget(view1,0,0)
         self.v_layout.addWidget(view2,0,1)
@@ -130,6 +132,7 @@ class Main(QMainWindow):
         self.bar_graph = BarChart()
         self.line_graph = None
         self.polar_graph = None
+        self.choose_graph_theme()
 
         view = self.bar_graph.get_view()
         self.v_layout.addWidget(view,0,0)
@@ -139,6 +142,7 @@ class Main(QMainWindow):
         self.polar_graph = PolarChart()
         self.line_graph = None
         self.bar_graph = None
+        self.choose_graph_theme()
 
         view = self.polar_graph.get_view()
         self.v_layout.addWidget(view,0,0)
@@ -159,7 +163,7 @@ class Main(QMainWindow):
     def start(self):
         self.serialSensorReadThread = threading.Thread(target=self.read_serial_sensor, daemon=True)
         self.serialSensorReadThread.start()
-        self.start_button.setIcon(QIcon("image/play-button.png"))
+        # self.start_button.setIcon(QIcon("image/play-button.png"))
         self.timer.start(1)
     def stop(self):
         if self.line_graph:
